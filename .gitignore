@@ -1,0 +1,6 @@
+# 環境ファイルの除外
+.env
+#DBの除外
+main.sqlite3
+#credentialファイルの除外
+credentials.json
