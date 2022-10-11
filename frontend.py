@@ -2,18 +2,22 @@
 
 import sys
 import tkinter as tk
-from tkinter import messagebox, S, E
+from tkinter import messagebox, S, E, BOTTOM,RIGHT
 import backend
 import gsheet
 import customtkinter as ctk
 import sqlite3
 from tkinter import ttk
+from os import environ
+from dotenv import load_dotenv
 
 
 class App():
     def __init__(self) -> None:
+        # 環境変数の読み込み
+        load_dotenv()
         self.root = ctk.CTk()
-
+        self.prog_window = None
         self.general_font = ("Arial", 20)
         self.width = None
         self.height = None
@@ -27,6 +31,25 @@ class App():
             messagebox.showerror(
                 "警告", "インターネットに接続されていないため、アプリケーションを起動できませんでした。インターネットに接続上で起動するようお願いします。")
             sys.exit()
+    #ウィンドウを中央寄せ
+    def screen_size(self,screen,width: int, height: int):
+        screen.update_idletasks()
+        ww=screen.winfo_screenwidth()
+        wh=screen.winfo_screenheight()
+        screen.geometry(str(width)+"x"+str(height)+"+"+str(int(ww/2-width/2))+"+"+str(int(wh/2-height/2)) )
+
+    def progress(self,content: str):
+        #ウィンドウの作成
+        self.prog_window = ctk.CTkToplevel()
+        self.prog_window.geometry("300x200")
+        # self.screen_size(self.prog_window,300,200)    #画面サイズの決定
+        self.prog_window.title("登録中")        #タイトルの決定
+        self.prog_window.overrideredirect(True)       #最大化・最小化無効
+        label = ctk.CTkLabel(self.prog_window,text=content,text_font=self.general_font)
+        label.pack(side="top",fill="x")
+        progressbar = ctk.CTkProgressBar(self.prog_window, progress_color="#006400", mode="indeterminate")
+        progressbar.pack(side="bottom",fill="x")
+
 
     def window_setup(self, root: ctk.CTk) -> None:
         """
@@ -81,6 +104,10 @@ class App():
     def register_screen(self, root: ctk.CTk):
         # タイトルの変更
         root.title("高額物品管理システム(登録)")
+
+        # .envファイルから団体名を読み込む。このときカンマ区切りでリストに追加
+        org = list(environ['all_org'].split(','))
+
         # 登録画面用のフレーム用意(base)
         frame = ctk.CTkFrame(master=root, width=self.width,
                              height=self.height, corner_radius=0, border_width=0)
@@ -110,15 +137,15 @@ class App():
         use_group_label = ctk.CTkLabel(
             master=entry_frame, text="使用団体", text_font=self.general_font)
         use_group_label.grid(row=3, column=0, padx=15, pady=15)
-        use_group_box = ctk.CTkComboBox(master=entry_frame, width=450, height=50, values=["学生会執行部", "体育祭実行委員会", "環境委員会", "広報委員会", "図書委員会", "産技祭実行委員会", "柔道部", "ラグビー部", "剣道部", "卓球部", "硬式野球部", "バスケットボール部", "硬式テニス部", "ソフトテニス部", "水泳部", "陸上競技部", "バドミントン部", "サッカー部",
-                                        "バレーボール部", "弓道部", "茶道部", "写真部", "電気通信部", "吹奏楽部", "石灰費(ラグビー部)", "石灰費(サッカー部)", "石灰費(硬式野球部)", "石灰費(陸上競技部)", "熱中症対策費(学生会執行部)", "コロナ対策費(学生会執行部)", "慶弔費", "新入生卒業生記念品(学生会執行部)"], dropdown_text_font=self.general_font, text_font=self.general_font, corner_radius=8)
+        use_group_box = ctk.CTkComboBox(master=entry_frame, width=500, height=50, values=org,
+                                        dropdown_text_font=self.general_font, text_font=self.general_font, corner_radius=8)
         use_group_box.set("団体名を選んでください")
         use_group_box.grid(row=3, column=1, padx=15, pady=15)
 
         name_label = ctk.CTkLabel(
             master=entry_frame, text="代表者名", text_font=self.general_font)
         name_label.grid(row=4, column=0, padx=15, pady=15)
-        name_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="顧問の名前", width=450,
+        name_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="顧問の名前", width=500,
                                   height=50, border_width=2, corner_radius=8, text_font=self.general_font)
         name_entry.grid(row=4, column=1, padx=15, pady=15)
 
@@ -126,20 +153,20 @@ class App():
             master=entry_frame, text="購入日", text_font=self.general_font)
         purchase_date_label.grid(row=5, column=0, padx=15, pady=15)
         purchase_date_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="2022年11月20日→20221001(8桁)",
-                                           width=450, height=50, border_width=2, corner_radius=8, text_font=self.general_font)
+                                           width=500, height=50, border_width=2, corner_radius=8, text_font=self.general_font)
         purchase_date_entry.grid(row=5, column=1, padx=15, pady=15)
 
         control_num_label = ctk.CTkLabel(
             master=entry_frame, text="管理番号", text_font=self.general_font)
         control_num_label.grid(row=6, column=0, padx=15, pady=15)
         control_num_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="別途内部資料参考",
-                                         width=450, height=50, border_width=2, corner_radius=8, text_font=self.general_font)
+                                         width=500, height=50, border_width=2, corner_radius=8, text_font=self.general_font)
         control_num_entry.grid(row=6, column=1, padx=15, pady=15)
 
         note_label = ctk.CTkLabel(
             master=entry_frame, text="備考欄", text_font=self.general_font)
         note_label.grid(row=7, column=0, padx=15, pady=15)
-        note_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="", width=700,
+        note_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="特にない場合は「None」と入力", width=700,
                                   height=50, border_width=0, corner_radius=8, text_font=self.general_font)
         note_entry.grid(row=7, column=1, padx=15, pady=15)
 
@@ -160,7 +187,8 @@ class App():
             """
             sqlite3とGoogleのスプレッドシートにそれぞれ登録する。また、登録する前に念のためネットワーク接続を確認している。
             """
-
+            #進捗バー表示
+            # self.progress(content="データベースに登録中...")
             # 入力値の取得
             get_list = []  # 入力欄の値を格納するリスト
             for i in goods_entry.get(), goods_detail_entry.get(), use_group_box.get(), name_entry.get(), purchase_date_entry.get(), control_num_entry.get(), note_entry.get():
@@ -181,11 +209,13 @@ class App():
                 result = ping.ping()
                 if result == True:
                     # sqlite3に追加
-                    ope.db_register(get_list)
-                    a.sp_insert(get_list)
-                    # Googleスプレッドシート側に追加
                     ope = backend.DB_operation()
-                    a = gsheet.Google_spreadsheet_operation()
+                    ope.db_register(get_list)
+                    # Googleスプレッドシート側に追加
+                    google_ope = gsheet.Google_spreadsheet_operation()
+                    google_ope.sp_insert(get_list)
+                    #進捗バーの消去
+                    # self.prog_window.destroy()
                     messagebox.showinfo("通知", "登録が完了しました")
                 elif result == False:
                     messagebox.showerror("警告", "インターネットに接続していないため、登録ができません")
@@ -197,15 +227,14 @@ class App():
             return None
 
     def delete_screen(self, root: ctk.CTk):
-        #タイトルの変更
+        # タイトルの変更
         root.title("高額物品管理システム(削除・廃棄)")
 
-        #削除画面用のフレームの用意(base)
+        # 削除画面用のフレームの用意(base)
         frame = ctk.CTkFrame(master=root, width=self.width,
                              height=self.height, corner_radius=0, border_width=0)
         frame.grid(row=0, column=0, sticky="nsew")
-        frame.tkraise()     #作成したフレームを一番上に持ってくる。
-
+        frame.tkraise()  # 作成したフレームを一番上に持ってくる。
 
         # Entry用のフレーム用意
         entry_frame = ctk.CTkFrame(
@@ -253,6 +282,9 @@ class App():
                         if result == True:
                             ope = backend.DB_operation()
                             ope.db_delete(control_num)
+                            # Googleスプレッドシート側に追加
+                            google_ope = gsheet.Google_spreadsheet_operation()
+                            google_ope.sp_delete(control_num)
                             messagebox.showinfo("通知", "削除が完了しました")
                         elif result == False:
                             messagebox.showerror(
@@ -279,6 +311,9 @@ class App():
                         if result == True:
                             ope = backend.DB_operation()
                             ope.db_waste(control_num)
+                            # Googleスプレッドシート側に追加
+                            google_ope = gsheet.Google_spreadsheet_operation()
+                            google_ope.sp_waste(control_num)
                             messagebox.showinfo("通知", "登録が完了しました")
                         elif result == False:
                             messagebox.showerror(
@@ -299,17 +334,26 @@ class App():
 
         list_frame = ctk.CTkFrame(
             master=frame, corner_radius=0, border_width=0)
-        list_frame.pack(pady=10)
+        list_frame.pack(pady=10,ipadx=4,ipady=4)
 
-        column_all = ("物品名", "購入日", "管理番号", "使用団体", "代表者名", "備考", "廃棄")
-        list_tree = ttk.Treeview(
-            list_frame, columns=column_all, selectmode="none", height=45)
+        column_all = ("物品名", "物品の型番", "使用団体",  "代表者名",
+                      "購入日", "管理番号", "備考", "廃棄")
+        list_tree = ttk.Treeview(list_frame, columns=column_all, selectmode="none", height=45)
+        ctk_textbox_scrollbar_y = ctk.CTkScrollbar(list_frame, orientation="vertical",command=list_tree.yview, hover=True,width=20)
+        ctk_textbox_scrollbar_y.pack(side=RIGHT,fill='y')
+        list_tree["yscrollcommand"] = ctk_textbox_scrollbar_y.set
+        ctk_textbox_scrollbar_x = ctk.CTkScrollbar(list_frame, orientation="horizontal", command=list_tree.xview,hover=True,width=10)
+        ctk_textbox_scrollbar_x.pack(side=BOTTOM,fill='x')
+        list_tree["xscrollcommand"] = ctk_textbox_scrollbar_x.set
+        list_tree.pack(side='left')
+
         style = ttk.Style()
         style.configure("Treeview.Heading", font=("MS ゴシック", 24))
         style.configure("Treeview", font=("Arial", 16))
 
         list_tree.heading('#0', text='')
         list_tree.heading('物品名', text='物品名', anchor='center')
+        list_tree.heading('物品の型番', text='物品の型番', anchor='center')
         list_tree.heading('購入日', text='購入日', anchor='center')
         list_tree.heading('管理番号', text='管理番号', anchor='center')
         list_tree.heading('使用団体', text='使用団体', anchor='center')
@@ -318,14 +362,14 @@ class App():
         list_tree.heading('廃棄', text='廃棄', anchor='center')
 
         list_tree.column('#0', width=0, stretch=False)
-        list_tree.column('物品名', anchor='center', width=250, stretch=False)
-        list_tree.column('購入日', anchor='center', width=200, stretch=False)
-        list_tree.column('管理番号', anchor='w', width=200, stretch=False)
-        list_tree.column('使用団体', anchor='center', width=250, stretch=False)
-        list_tree.column('代表者名', anchor='center', width=250, stretch=False)
-        list_tree.column('備考', anchor='w', width=600, stretch=False)
-        list_tree.column('廃棄', anchor='w', width=85, stretch=False)
-        list_tree.pack()
+        list_tree.column('物品名', anchor='center', width=200, stretch=False)
+        list_tree.column('物品の型番', anchor='center', width=250, stretch=False)
+        list_tree.column('購入日', anchor='center', width=125, stretch=False)
+        list_tree.column('管理番号', anchor='w', width=140, stretch=False)
+        list_tree.column('使用団体', anchor='center', width=280, stretch=False)
+        list_tree.column('代表者名', anchor='center', width=200, stretch=False)
+        list_tree.column('備考', anchor='w', width=550, stretch=False)
+        list_tree.column('廃棄', anchor='center', width=75, stretch=False)
 
         # list_tree.insert(parent='', index='end',values=(1, 'KAWASAKI',80))
 
@@ -344,8 +388,8 @@ class App():
             master=frame, corner_radius=0, border_width=0)
         button_frame.pack(pady=10)
         end_button = ctk.CTkButton(master=button_frame, width=200, height=40, border_width=0, corner_radius=8,
-                                   text="メインメニューに戻る",  fg_color="red", text_font=("MS ゴシック", 14), command=lambda: return_button())
-        end_button.pack(padx=10, pady=10, side=tk.RIGHT)
+                                   text="メインメニューに戻る",  fg_color="red", hover_color="red",text_font=("MS ゴシック", 14), command=lambda: return_button())
+        end_button.pack(padx=10, pady=5, side=tk.RIGHT)
 
         def return_button():
             frame.destroy()
