@@ -426,7 +426,7 @@ class App():
         list_tree.pack(side='left')
 
         style = ttk.Style()
-        style.configure("Treeview.Heading", font=("MS ゴシック", 24))
+        style.configure("Treeview.Heading", font=("MS ゴシック", 20))
         style.configure("Treeview", font=("Arial", 16))
 
         list_tree.heading('#0', text='')

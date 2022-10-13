@@ -1,4 +1,3 @@
-from json import load
 from os import environ
 
 import gspread
