@@ -1,26 +1,31 @@
-# -*- coding: utf-8 -*-
-
+import sqlite3
 import sys
+import threading
+import time
 import tkinter as tk
-from tkinter import messagebox, S, E, BOTTOM,RIGHT
+from os import environ
+from tkinter import BOTTOM, RIGHT, E, S, messagebox, ttk
+
+import customtkinter as ctk
+from dotenv import load_dotenv
+import webbrowser
+
+
 import backend
 import gsheet
-import customtkinter as ctk
-import sqlite3
-from tkinter import ttk
-from os import environ
-from dotenv import load_dotenv
 
 
 class App():
     def __init__(self) -> None:
         # 環境変数の読み込み
-        load_dotenv()
+        load_dotenv(dotenv_path="../setting/.env")
         self.root = ctk.CTk()
         self.prog_window = None
         self.general_font = ("Arial", 20)
         self.width = None
         self.height = None
+        #登録処理が終わっているかの確認用（Trueが終わっているという意味）
+        self.finished = False
 
         # このAppはインターネットに接続していないと使えない。接続が確認できない場合はFalseを返し強制終了
         ping = backend.Ping()
@@ -31,33 +36,126 @@ class App():
             messagebox.showerror(
                 "警告", "インターネットに接続されていないため、アプリケーションを起動できませんでした。インターネットに接続上で起動するようお願いします。")
             sys.exit()
-    #ウィンドウを中央寄せ
-    def screen_size(self,screen,width: int, height: int):
+
+    
+    def screen_size(self, screen, width: int, height: int):
+        """
+        画面サイズを指定したら、自動的に中央に配置されるように計算する
+        """
         screen.update_idletasks()
-        ww=screen.winfo_screenwidth()
-        wh=screen.winfo_screenheight()
-        screen.geometry(str(width)+"x"+str(height)+"+"+str(int(ww/2-width/2))+"+"+str(int(wh/2-height/2)) )
+        ww = screen.winfo_screenwidth()
+        wh = screen.winfo_screenheight()
+        screen.geometry(str(width)+"x"+str(height)+"+" +
+                        str(int(ww/2-width/2))+"+"+str(int(wh/2-height/2)))
 
-    def progress(self,content: str):
-        #ウィンドウの作成
+    def progress(self, content: str):
+        # ウィンドウの作成
         self.prog_window = ctk.CTkToplevel()
-        self.prog_window.geometry("300x200")
-        # self.screen_size(self.prog_window,300,200)    #画面サイズの決定
-        self.prog_window.title("登録中")        #タイトルの決定
-        self.prog_window.overrideredirect(True)       #最大化・最小化無効
-        label = ctk.CTkLabel(self.prog_window,text=content,text_font=self.general_font)
-        label.pack(side="top",fill="x")
-        progressbar = ctk.CTkProgressBar(self.prog_window, progress_color="#006400", mode="indeterminate")
-        progressbar.pack(side="bottom",fill="x")
+        self.screen_size(self.prog_window, 350, 150)  # 画面サイズの決定
+        self.prog_window.overrideredirect(True)  # 最大化・最小化無効
+        label = ctk.CTkLabel(self.prog_window, text=content,
+                             text_font=self.general_font)
+        label.pack(side="top", fill="both",pady=15)
+        progressbar = ctk.CTkProgressBar(
+            self.prog_window, progress_color="#006400", mode="indeterminate")
+        progressbar.pack(side="bottom", fill="x", padx=10,pady=15)
+        progressbar.start()
+        # もう一つの登録処理が終了するまで待機
+        while not self.finished:
+            time.sleep(0.1)
+        progressbar.stop()          # プログレスバーの停止
+        self.prog_window.destroy()  # ウィンドウの消去
 
+    def register(self, get_list: list):
+        """
+        sqlite3とGoogleのスプレッドシートにそれぞれ登録する。また、登録する前に念のためネットワーク接続を確認している。
+        """
+
+        # 登録処理が終わっているかの確認用（Trueが終わっているという意味）
+        self.finished = False
+
+        try:
+            # DBの登録前にインターネットに接続出来ているかを確認
+            ping = backend.Ping()
+            result = ping.ping()
+            if result == True:
+                # sqlite3に追加
+                ope = backend.DB_operation()
+                ope.db_register(get_list)
+                # Googleスプレッドシート側に追加
+                google_ope = gsheet.Google_spreadsheet_operation()
+                google_ope.sp_insert(get_list)
+                messagebox.showinfo("通知", "登録が完了しました")
+            elif result == False:
+                messagebox.showerror("警告", "インターネットに接続していないため、登録ができません")
+        except sqlite3.IntegrityError:
+            messagebox.showerror("通知", f"管理番号が重複しています")
+        except Exception as e:
+            messagebox.showerror("通知", f"エラーが発生しました。\n{e}")
+        finally:
+            # 登録処理が終了したことにする
+            self.finished = True
+
+    def delete(self):
+        """
+        DBから削除を行う。また、同時にGoogleのスプレッドシートからも削除する。削除前に、インターネットに接続しているかも確認する。
+        """
+
+        # 登録処理が終わっているかの確認用（Trueが終わっているという意味）
+        self.finished = False
+        try:
+            # DBの削除前にインターネットに接続出来ているかを確認
+            ping = backend.Ping()
+            result = ping.ping()
+            if result == True:
+                ope = backend.DB_operation()
+                ope.db_delete(self.del_control_num_entry.get())
+                # Googleスプレッドシート側に追加
+                google_ope = gsheet.Google_spreadsheet_operation()
+                google_ope.sp_delete(self.del_control_num_entry.get())
+                messagebox.showinfo("通知", "削除が完了しました")
+            elif result == False:
+                messagebox.showerror(
+                    "警告", "インターネットに接続していないため、登録ができません")
+        except Exception as e:
+            messagebox.showerror("エラー", f"エラーが発生しました。\n{e}")
+        finally:
+            # 登録処理が終了したことにする
+            self.finished = True
+
+    def waste(self):
+        """
+        廃棄するときに「廃棄」を登録すための関数。
+        """
+
+        # 登録処理が終わっているかを確認用（Trueが終わっているという意味）
+        self.finished = False
+        try:
+            # DBの登録前にインターネットに接続出来ているかを確認
+            ping = backend.Ping()
+            result = ping.ping()
+            if result == True:
+                ope = backend.DB_operation()
+                ope.db_waste(self.del_control_num_entry.get())
+                # Googleスプレッドシート側に追加
+                google_ope = gsheet.Google_spreadsheet_operation()
+                google_ope.sp_waste(self.del_control_num_entry.get())
+                messagebox.showinfo("通知", "登録が完了しました")
+            elif result == False:
+                messagebox.showerror(
+                    "警告", "インターネットに接続していないため、登録ができません")
+        except Exception as e:
+            messagebox.showerror("エラー", f"エラーが発生しました。\n{e}")
+        finally:
+            # 登録処理が終了したことにする
+            self.finished = True
 
     def window_setup(self, root: ctk.CTk) -> None:
         """
         このAppのテーマカラーやタイトル、画面サイズの設定を行う。
         """
 
-        # OSのテーマカラーに合わせる。(dark or light)
-        root.set_appearance_mode("System")
+        root.set_appearance_mode("System")          # OSのテーマカラーに合わせる。(dark or light)
         ctk.set_default_color_theme("dark-blue")    # テーマカラーをダークブルーに統一
 
         # 画面サイズを取得
@@ -123,52 +221,52 @@ class App():
         goods_label = ctk.CTkLabel(
             master=entry_frame, text="物品名", text_font=self.general_font)
         goods_label.grid(row=1, column=0, padx=15, pady=15)
-        goods_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="抽象的な名前", width=700,
-                                   height=50, border_width=2, corner_radius=8, text_font=self.general_font)
-        goods_entry.grid(row=1, column=1, padx=15, pady=15)
+        self.goods_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="抽象的な名前", width=700,
+                                        height=50, border_width=2, corner_radius=8, text_font=self.general_font)
+        self.goods_entry.grid(row=1, column=1, padx=15, pady=15)
 
         goods_detail_label = ctk.CTkLabel(
             master=entry_frame, text="物品の型番", text_font=self.general_font)
         goods_detail_label.grid(row=2, column=0, padx=15, pady=15)
-        goods_detail_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="その商品が特定できる程度",
-                                          width=700, height=50, border_width=2, corner_radius=8, text_font=self.general_font)
-        goods_detail_entry.grid(row=2, column=1, padx=15, pady=15)
+        self.goods_detail_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="その商品が特定できる程度",
+                                               width=700, height=50, border_width=2, corner_radius=8, text_font=self.general_font)
+        self.goods_detail_entry.grid(row=2, column=1, padx=15, pady=15)
 
         use_group_label = ctk.CTkLabel(
             master=entry_frame, text="使用団体", text_font=self.general_font)
         use_group_label.grid(row=3, column=0, padx=15, pady=15)
-        use_group_box = ctk.CTkComboBox(master=entry_frame, width=500, height=50, values=org,
-                                        dropdown_text_font=self.general_font, text_font=self.general_font, corner_radius=8)
-        use_group_box.set("団体名を選んでください")
-        use_group_box.grid(row=3, column=1, padx=15, pady=15)
+        self.use_group_box = ctk.CTkComboBox(master=entry_frame, width=500, height=50, values=org,
+                                             dropdown_text_font=self.general_font, text_font=self.general_font, corner_radius=8)
+        self.use_group_box.set("団体名を選んでください")
+        self.use_group_box.grid(row=3, column=1, padx=15, pady=15)
 
         name_label = ctk.CTkLabel(
             master=entry_frame, text="代表者名", text_font=self.general_font)
         name_label.grid(row=4, column=0, padx=15, pady=15)
-        name_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="顧問の名前", width=500,
-                                  height=50, border_width=2, corner_radius=8, text_font=self.general_font)
-        name_entry.grid(row=4, column=1, padx=15, pady=15)
+        self.name_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="顧問の名前", width=500,
+                                       height=50, border_width=2, corner_radius=8, text_font=self.general_font)
+        self.name_entry.grid(row=4, column=1, padx=15, pady=15)
 
         purchase_date_label = ctk.CTkLabel(
             master=entry_frame, text="購入日", text_font=self.general_font)
         purchase_date_label.grid(row=5, column=0, padx=15, pady=15)
-        purchase_date_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="2022年11月20日→20221001(8桁)",
-                                           width=500, height=50, border_width=2, corner_radius=8, text_font=self.general_font)
-        purchase_date_entry.grid(row=5, column=1, padx=15, pady=15)
+        self.purchase_date_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="2022年01月01日→20220101(8桁)",
+                                                width=500, height=50, border_width=2, corner_radius=8, text_font=self.general_font)
+        self.purchase_date_entry.grid(row=5, column=1, padx=15, pady=15)
 
         control_num_label = ctk.CTkLabel(
             master=entry_frame, text="管理番号", text_font=self.general_font)
         control_num_label.grid(row=6, column=0, padx=15, pady=15)
-        control_num_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="別途内部資料参考",
-                                         width=500, height=50, border_width=2, corner_radius=8, text_font=self.general_font)
-        control_num_entry.grid(row=6, column=1, padx=15, pady=15)
+        self.control_num_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="別途内部資料参考",
+                                              width=500, height=50, border_width=2, corner_radius=8, text_font=self.general_font)
+        self.control_num_entry.grid(row=6, column=1, padx=15, pady=15)
 
         note_label = ctk.CTkLabel(
             master=entry_frame, text="備考欄", text_font=self.general_font)
         note_label.grid(row=7, column=0, padx=15, pady=15)
-        note_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="特にない場合は「None」と入力", width=700,
-                                  height=50, border_width=0, corner_radius=8, text_font=self.general_font)
-        note_entry.grid(row=7, column=1, padx=15, pady=15)
+        self.note_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="特にない場合は「None」と入力", width=700,
+                                       height=50, border_width=0, corner_radius=8, text_font=self.general_font)
+        self.note_entry.grid(row=7, column=1, padx=15, pady=15)
 
         # 登録と終了ボタン用のframeを作成する
         button_frame = ctk.CTkFrame(
@@ -176,55 +274,43 @@ class App():
         button_frame.pack(pady=5, anchor=tk.CENTER)
 
         register_button = ctk.CTkButton(master=button_frame, width=100, height=40, text_font=(
-            "MS ゴシック", 14), border_width=0, corner_radius=8, text="登録", command=lambda: register())
+            "MS ゴシック", 14), border_width=0, corner_radius=8, text="登録", command=lambda: thread_work())
         register_button.pack(padx=10, pady=10, side=tk.RIGHT)
 
         end_button = ctk.CTkButton(master=button_frame, width=200, height=40, border_width=0, corner_radius=8,
                                    text="メインメニューに戻る",  hover_color="red", text_font=("MS ゴシック", 14), command=lambda: frame.destroy())
         end_button.pack(padx=10, pady=10, side=tk.RIGHT)
 
-        def register():
-            """
-            sqlite3とGoogleのスプレッドシートにそれぞれ登録する。また、登録する前に念のためネットワーク接続を確認している。
-            """
-            #進捗バー表示
-            # self.progress(content="データベースに登録中...")
+        def thread_work():
             # 入力値の取得
             get_list = []  # 入力欄の値を格納するリスト
-            for i in goods_entry.get(), goods_detail_entry.get(), use_group_box.get(), name_entry.get(), purchase_date_entry.get(), control_num_entry.get(), note_entry.get():
+            for i in self.goods_entry.get(), self.goods_detail_entry.get(), self. use_group_box.get(), self.name_entry.get(), self.purchase_date_entry.get(), self.control_num_entry.get(), self.note_entry.get():
                 # 空欄があると登録できないようにしている。問題がなければリストに追加
                 if i == "":
                     messagebox.showwarning("通知", "空欄の所があります")
                     return None
-                elif str.isdecimal(purchase_date_entry.get()) == False:
+                elif str.isdecimal(self.purchase_date_entry.get()) == False:
                     messagebox.showerror(
                         "入力値エラー", "購入日の入力値が正しく入力されていません\nex)数字以外が入力されている")
                     return None
+                elif len(self.purchase_date_entry.get()) != 8:
+                    messagebox.showerror(
+                        "入力値エラー", "８桁の数字で入力してください")
+                    return None
                 else:
                     get_list.append(i)
-
-            try:
-                # DBの登録前にインターネットに接続出来ているかを確認
-                ping = backend.Ping()
-                result = ping.ping()
-                if result == True:
-                    # sqlite3に追加
-                    ope = backend.DB_operation()
-                    ope.db_register(get_list)
-                    # Googleスプレッドシート側に追加
-                    google_ope = gsheet.Google_spreadsheet_operation()
-                    google_ope.sp_insert(get_list)
-                    #進捗バーの消去
-                    # self.prog_window.destroy()
-                    messagebox.showinfo("通知", "登録が完了しました")
-                elif result == False:
-                    messagebox.showerror("警告", "インターネットに接続していないため、登録ができません")
-            except sqlite3.IntegrityError:
-                messagebox.showerror("通知", f"管理番号が重複しています")
-            except Exception as e:
-                messagebox.showerror("通知", f"エラーが発生しました。\n{e}")
-
-            return None
+            # buttonを無効化
+            register_button['state'] = "disable"
+            end_button['state'] = "disable"
+            # プログレスバーと登録処理をマルチスレッドで実行
+            register_thread = threading.Thread(target=self.register, args=(get_list,))
+            progress_thread = threading.Thread(
+                target=self.progress, args=("データベースに登録中...",))
+            register_thread.start()
+            progress_thread.start()
+            # buttonを有効化
+            register_button['state'] = "normal"
+            end_button['state'] = "normal"
 
     def delete_screen(self, root: ctk.CTk):
         # タイトルの変更
@@ -244,9 +330,9 @@ class App():
         control_num_label = ctk.CTkLabel(
             master=entry_frame, text="管理番号を入力してください", text_font=self.general_font)
         control_num_label.grid(row=1, column=0, padx=15, pady=15)
-        control_num_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="", width=400,
-                                         height=50, border_width=2, corner_radius=8, text_font=self.general_font)
-        control_num_entry.grid(row=2, column=3, padx=15, pady=15)
+        self.del_control_num_entry = ctk.CTkEntry(master=entry_frame, placeholder_text="", width=400,
+                                                  height=50, border_width=2, corner_radius=8, text_font=self.general_font)
+        self.del_control_num_entry.grid(row=2, column=3, padx=15, pady=15)
 
         # 登録と終了ボタン用のframeを作成する
         button_frame = ctk.CTkFrame(
@@ -254,73 +340,62 @@ class App():
         button_frame.pack(pady=5, anchor=tk.CENTER)
 
         delete_button = ctk.CTkButton(master=button_frame, width=100, height=40, text_font=(
-            "MS ゴシック", 14), border_width=0, corner_radius=8, text="完全に削除", fg_color="#ff758c", command=lambda: delete(control_num_entry.get()))
+            "MS ゴシック", 14), border_width=0, corner_radius=8, text="完全に削除", fg_color="#ff758c", command=lambda: thread_delete())
         delete_button.pack(padx=10, pady=10, side=tk.RIGHT)
 
         waste_button = ctk.CTkButton(master=button_frame, width=100, height=40, text_font=(
-            "MS ゴシック", 14), border_width=0, corner_radius=8, text="廃棄", fg_color="#ff7eb3", command=lambda: waste(control_num_entry.get()))
+            "MS ゴシック", 14), border_width=0, corner_radius=8, text="廃棄", fg_color="#ff7eb3", command=lambda: thread_waste())
         waste_button.pack(padx=10, pady=10, side=tk.RIGHT)
 
         end_button = ctk.CTkButton(master=button_frame, width=200, height=40, border_width=0, corner_radius=8,
                                    text="メインメニューに戻る",  fg_color="red", text_font=("MS ゴシック", 14), command=lambda: frame.destroy())
         end_button.pack(padx=10, pady=10, side=tk.RIGHT)
 
-        def delete(control_num: str):
-            """
-            DBから削除を行う。また、同時にGoogleのスプレッドシートからも削除する。削除前に、インターネットに接続しているかも確認する。
-            """
-            if control_num_entry.get() == "":
+        def thread_delete():
+            if self.del_control_num_entry.get() == "":
                 messagebox.showwarning("通知", "何も入力されていません")
+                return None
             else:
                 confirm = messagebox.askokcancel(
                     "確認", "データベースから完全に削除をしてもよろしいですか?\n※登録を間違えたとき以外は使用しないでください。")
                 if confirm == True:
-                    try:
-                        # DBの削除前にインターネットに接続出来ているかを確認
-                        ping = backend.Ping()
-                        result = ping.ping()
-                        if result == True:
-                            ope = backend.DB_operation()
-                            ope.db_delete(control_num)
-                            # Googleスプレッドシート側に追加
-                            google_ope = gsheet.Google_spreadsheet_operation()
-                            google_ope.sp_delete(control_num)
-                            messagebox.showinfo("通知", "削除が完了しました")
-                        elif result == False:
-                            messagebox.showerror(
-                                "警告", "インターネットに接続していないため、登録ができません")
-                    except Exception as e:
-                        messagebox.showerror("エラー", f"エラーが発生しました。\n{e}")
-            return None
+                    # buttonを無効化
+                    delete_button['state'] = "disable"
+                    waste_button['state'] = "disable"
+                    end_button['state'] = "disable"
+                    # プログレスバーと登録処理をマルチスレッドで実行
+                    delete_thread = threading.Thread(target=self.delete)
+                    progress_thread = threading.Thread(
+                        target=self.progress, args=("データベースに登録中...",))
+                    delete_thread.start()
+                    progress_thread.start()
+                    # buttonを有効化
+                    delete_button['state'] = "normal"
+                    waste_button['state'] = "normal"
+                    end_button['state'] = "normal"
 
-        def waste(control_num: str):
-            """
-            廃棄するときに廃棄ということを登録すための関数。
-            """
-            if control_num_entry.get() == "":
+        def thread_waste():
+            if self.del_control_num_entry.get() == "":
                 messagebox.showwarning("通知", "何も入力されていません")
                 return None
             else:
                 confirm = messagebox.askokcancel(
                     "確認", "データベースに対して廃棄済みとして登録しますがよろしいですか?")
                 if confirm == True:
-                    try:
-                        # DBの登録前にインターネットに接続出来ているかを確認
-                        ping = backend.Ping()
-                        result = ping.ping()
-                        if result == True:
-                            ope = backend.DB_operation()
-                            ope.db_waste(control_num)
-                            # Googleスプレッドシート側に追加
-                            google_ope = gsheet.Google_spreadsheet_operation()
-                            google_ope.sp_waste(control_num)
-                            messagebox.showinfo("通知", "登録が完了しました")
-                        elif result == False:
-                            messagebox.showerror(
-                                "警告", "インターネットに接続していないため、登録ができません")
-                    except Exception as e:
-                        messagebox.showerror("エラー", f"エラーが発生しました。\n{e}")
-            return None
+                    # buttonを無効化
+                    delete_button['state'] = "disable"
+                    waste_button['state'] = "disable"
+                    end_button['state'] = "disable"
+                    # プログレスバーと登録処理をマルチスレッドで実行
+                    waste_thread = threading.Thread(target=self.waste)
+                    progress_thread = threading.Thread(
+                        target=self.progress, args=("データベースに登録中...",))
+                    waste_thread.start()
+                    progress_thread.start()
+                    # buttonを有効化
+                    delete_button['state'] = "normal"
+                    waste_button['state'] = "normal"
+                    end_button['state'] = "normal"
 
     def list_screen(self, root: ctk.CTk):
         """
@@ -334,16 +409,19 @@ class App():
 
         list_frame = ctk.CTkFrame(
             master=frame, corner_radius=0, border_width=0)
-        list_frame.pack(pady=10,ipadx=4,ipady=4)
+        list_frame.pack(pady=10, ipadx=4, ipady=4)
 
         column_all = ("物品名", "物品の型番", "使用団体",  "代表者名",
                       "購入日", "管理番号", "備考", "廃棄")
-        list_tree = ttk.Treeview(list_frame, columns=column_all, selectmode="none", height=45)
-        ctk_textbox_scrollbar_y = ctk.CTkScrollbar(list_frame, orientation="vertical",command=list_tree.yview, hover=True,width=20)
-        ctk_textbox_scrollbar_y.pack(side=RIGHT,fill='y')
+        list_tree = ttk.Treeview(
+            list_frame, columns=column_all, selectmode="none", height=45)
+        ctk_textbox_scrollbar_y = ctk.CTkScrollbar(
+            list_frame, orientation="vertical", command=list_tree.yview, hover=True, width=20)
+        ctk_textbox_scrollbar_y.pack(side=RIGHT, fill='y')
         list_tree["yscrollcommand"] = ctk_textbox_scrollbar_y.set
-        ctk_textbox_scrollbar_x = ctk.CTkScrollbar(list_frame, orientation="horizontal", command=list_tree.xview,hover=True,width=10)
-        ctk_textbox_scrollbar_x.pack(side=BOTTOM,fill='x')
+        ctk_textbox_scrollbar_x = ctk.CTkScrollbar(
+            list_frame, orientation="horizontal", command=list_tree.xview, hover=True, width=10)
+        ctk_textbox_scrollbar_x.pack(side=BOTTOM, fill='x')
         list_tree["xscrollcommand"] = ctk_textbox_scrollbar_x.set
         list_tree.pack(side='left')
 
@@ -388,7 +466,7 @@ class App():
             master=frame, corner_radius=0, border_width=0)
         button_frame.pack(pady=10)
         end_button = ctk.CTkButton(master=button_frame, width=200, height=40, border_width=0, corner_radius=8,
-                                   text="メインメニューに戻る",  fg_color="red", hover_color="red",text_font=("MS ゴシック", 14), command=lambda: return_button())
+                                   text="メインメニューに戻る",  fg_color="red", hover_color="red", text_font=("MS ゴシック", 14), command=lambda: return_button())
         end_button.pack(padx=10, pady=5, side=tk.RIGHT)
 
         def return_button():
