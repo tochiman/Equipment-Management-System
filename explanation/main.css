@@ -6,11 +6,33 @@
     text-align: center;
 }
 
+html{
+    background-color: gray;
+    min-width:800px;
+    min-height:800px;
+}
+
 body{
-    padding-top:0px;
-    padding-bottom:30px;
-    padding-left:300px;
-    padding-right:300px;
+    padding-top:5%;
+    padding-bottom:10%;
+    padding-left:10%;
+    padding-right:10%;
+    background-color: white;
+
+    margin-top:1%;
+    margin-right:10%;
+    margin-left:10%;
+}
+
+.update-day{
+    text-align:right;
+}
+
+.EMS-url{
+    color:white;
+    position: absolute;
+    bottom:4.3%;
+    left:1%;
 }
 
 a{
@@ -92,7 +114,7 @@ div{
 .PAGETOP{
     opacity:0.85;
     text-align:center;
-    background-color: gainsboro;
+    background-color: rgba(243, 239, 239, 0.836);
 }
 
 #mail{
@@ -109,7 +131,7 @@ div{
     justify-content: center;
     align-items: center;
     z-index: 90;
-    background-color: #3584bb;
+    background-color: #3b698a;
 }
 .menu-btn span,
 .menu-btn span:before,
@@ -146,7 +168,7 @@ div{
     left: 0;
 }
 .menu-content {
-    width: 300px;
+    width: 18%;
     height: 100%;
     position: fixed;
     top: 0;
