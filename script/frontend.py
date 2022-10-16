@@ -303,7 +303,7 @@ class App():
                     return None
                 elif len(self.purchase_date_entry.get()) != 8:
                     messagebox.showerror(
-                        "入力値エラー", "８桁の数字で入力してください")
+                        "入力値エラー", "購入日は８桁の数字で入力してください")
                     return None
                 else:
                     get_list.append(i)
