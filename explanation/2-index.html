@@ -4,42 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport",content="width=device-width",initial-scale="1">
     <title>高額物品資料</title>
-    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="3-main.css">
 </head>
 <body>
+    <!--↓ハンバーガーメニュー-->
     <header>
         <div class="hamburger-menu">
             <input type="checkbox" id="menu-btn-check">
             <label for="menu-btn-check" class="menu-btn"><span></span></label>
             <div class="menu-content">
-                <ul>
+                <ul class="Nodot">
                     <li><a href="#mokuji">目次</a></li>
                     <li><a href="#setumei">この資料について</a></li>
                     <li><a href="#teigi">"高額物品"とは</a></li>
                     <li><a href="#nagare">高額物品の支出の大まかな流れ</a></li>
                     <li><a href="#yosankaigi">予算会議での承認</a></li>
                     <li><a href="#seikyuusinsei">団体から請求書と申請書が提出された</a></li>
-                    <li><a href="#detakanri">データベース上での管理</a></li>
-                    <li><a href="#zitubutukanri">実物の管理</a></li>
+                    <li><a href="#zitubutukanri">物品の登録・管理</a></li>
+                    <li><a href="#haiki">廃棄の方法</a></li>
+                    <li><a href="#kaihatukomento">開発者からのコメント</a></li>
                 </ul>
+                <a class="EMS-url" href="https://github.com/tochiman/Equipment-Management-System">
+                    <img src="4-Icon-GitHub.png" alt="GitHubへ" width="50px" height="50px"></img>
+                </a>
             </div>
         </div>
     </header>
+
+    <!--本文-->
     <h1 class="title">東京都立産業技術高等専門学校 学生会執行部 会計<br>高額物品 内部資料</h1>
+    <div class="update-day">最終更新日:2022年10月12日</div>
+    <!--1.目次-->
     <h2 id="mokuji">1.目次</h2>
+    <!--目次リスト-->
     <ul class="daimokuji">
         <li><a href="#mokuji">目次</a></li>
         <li><a href="#setumei">この資料について</a></li>
-        <li><a href="teigi">"高額物品"とは</a></li>
+        <li><a href="#teigi">"高額物品"とは</a></li>
         <li><a href="#nagare">高額物品の支出の大まかな流れ</a></li>
         <li><a href="#yosankaigi">予算会議での承認</a></li>
         <li><a href="#seikyuusinsei">団体から請求書と申請書が提出された</a></li>
-        <li><a href="#detakanri">データベース上での管理</a></li>
-        <li><a href="#zitubutukanri">実物の管理</a></li>
+        <li><a href="#zitubutukanri">物品の登録・管理</a></li>
+        <li><a href="#haiki">廃棄の方法</a></li>
+        <li><a href="#kaihatukomento">開発者からのコメント</a></li>
         </li>
     </ul>
     <br class="space-width">
 
+    <!--2.この資料について-->
     <h2 id="setumei">2.この資料について</h2>
     <p>
     「東京都立産業技術高等専門学校 学生会執行部 会計 高額物品 内部資料」は
@@ -56,6 +68,7 @@
     </p>
     <br class="space-width">
 
+    <!--3."高額物品"とは-->
     <h2 id="teigi">3."高額物品"とは</h2>
     <p>
     学生会執行部 会計では、単価十万円を超える物品を"高額物品"として扱います。<br><br>
@@ -63,19 +76,21 @@
     </p>
     <br class="space-width">
 
+    <!--4.高額物品の支出の大まかな流れ-->
     <h2 id="nagare">4.高額物品の支出の大まかな流れ</h2>
     <p>
     以下に、高額物品の支出の大まかな流れを記載します。
     </p><br>
+    <!--高額物品支出の大まかな流れ-->
     <ol class="syoumokuji">
         <br>
-        <span>4月</span>
+        <span>[4月]</span>
         <li>予算会議にて購入する予定の物品についての承認を取る。</li>
         <br>
-        <span>5月</span>
+        <span>[5月]</span>
         <li>前期学生総会にて高額物品を含めた予算案の承認を取る。</li>
         <br>
-        <span>支出開始～</span>
+        <span>[支出開始～]</span>
         <li>団体から請求書と申請書が提出された。</li>
         <li>請求書に対する承認と押印を行う。</li>
         <li>申請書に対する承認を行う。</li>
@@ -87,6 +102,7 @@
     </ol>
     <br class="space-width">
 
+    <!--5予算会議での承認-->
     <h2 id="yosankaigi">5.予算会議での承認</h2>
     <p>
         高額物品を購入する予定のある団体は、
@@ -104,13 +120,14 @@
         <li>この先は通常の予算会議と同じように進める。</li>
     </ol>
     <br class="space-width">
-    <br class="space-width">
 
+    <!--6.団体から請求書と申請書が提出された-->
     <h2 id="seikyuusinsei">6.団体から請求書と申請書が提出された</h2>
     <p>高額物品の購入を行う場合は、通常と異なる処理が必要です。</p>
     <br>
     <p>以下に、請求・申請の処理についての流れを示します。</p>
     <br>
+    <!--請求・申請の流れリスト-->
     <ol class="syoumokuji">
         <li>団体から高額物品を購入したいとの要望があった。</li>
         <li>申請書は品名までの項目を埋めてもらう。</li>
@@ -131,20 +148,45 @@
     <p>これは購入後に学校の備品として望ましくない等の理由によって精算を認められないなどのことが発生しないために必要なことです。</p><br><br>
     <br class="space-width">
 
-    <h2 id="detakanri">7.データベース上での管理・手順</h2>
+    <h2 id="zitubutukanri">7.物品の登録・管理</h2>
+    <p>以下に、実物の登録・管理の流れを示します。</p>
     <ol class="syoumokuji">
-        <li></li>
+        <li>団体から精算書と申請書が提出された。</li>
+        <li>高額物品管理システムを起動する。</li>
+        <li>備品管理登録へ進み、申請書を参考に枠を埋めていく。</li>
+        <ul class="Nodot">
+            <li>(書き方)申請書の欄→高額物品管理システムの欄</li>
+            <li>品名→物品名</li>
+            <li>規格→物品の型番</li>
+            <li>団体名→使用団体</li>
+            <li>顧問(氏名)→代表者名</li>
+            <li>購入日→購入日</li>
+            <li>管理番号→管理番号</li>
+            <ul>
+                <li>M：機械類</li>
+                <li>I：楽器類</li>
+                <li>S：文房具</li>
+                <li>E：運動器具類</li>
+                <li>T：工具類</li>
+                <li>D：食器類</li>
+                <li>F：家具類</li>
+            </ul>
+            <li>備考→備考欄</li>
+        </ul>
+        <li>物品名、規格、購入日、管理番号を記載した備品管理シールを団体に渡し、貼ってもらう。</li>
     </ol>
     <br class="space-width">
 
-    <h2 id="zitubutukanri">8.実物の管理・手順</h2>
-    <ol class="syoumokuji">
-        <li></li>
-    </ol>
+    <h2 id="haiki">8.廃棄の方法</h2>
+    <p>以下に、廃棄を行うときの流れを示します。</p>
     <br class="space-width">
 
-    <h2 id="kaihatusyakaranokomennto">9.開発者からのコメント</h2>
-    <div class="deeloper-comment">このアプリケーションについて何か問題が発生した場合は、<a id="mail" href="mailto:developer@tochiman.com"></a>にご連絡ください。また、このアプリケーションのソースコードは<a href="https://github.com/tochiman/Equipment-Management-System"></a>にあります。改造したい場合はお好きにどうぞ。</div>
+    <h2 id="kaihatukomento">9.開発者からのコメント</h2>
+    <div class="deeloper-comment">このアプリケーションについて何か問題が発生した場合は、
+        <a class="mail" href="mailto:developer@tochiman.com">developer@tochiman.com</a>
+        にご連絡ください。また、このアプリケーションのソースコードは
+        <a href="https://github.com/tochiman/Equipment-Management-System">https://github.com/tochiman/Equipment-Management-System</a>
+        にあります。改造したい場合はお好きにどうぞ。</div>
 
     <div class="pagetop">
         <a href="#" class="PAGETOP" title="PAGETOP"><p class="triangle-up"></p><p class="pagetop-word">PAGE TOP</p></a>
