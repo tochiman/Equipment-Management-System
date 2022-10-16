@@ -38,7 +38,7 @@ root(equipment-management-system)/
     ┣ .gitignore
     ┣ LICENSE
     ┗ README.md
+```
 2. また上のディレクトリ構造にある通り、.envフォルダは以下の通りの内容で作成。そして、
 >https://www.twilio.com/blog/an-easy-way-to-read-and-write-to-a-google-spreadsheet-in-python-jp
 にある通り、GCPのスプレッドシート操作のために、credentials.jsonを配置してください。
-```
