@@ -426,9 +426,9 @@ class App():
         column_all = ("物品名", "物品の型番", "使用団体",  "代表者名",
                       "購入日", "管理番号", "備考", "廃棄")
         list_tree = ttk.Treeview(
-            list_frame, columns=column_all, selectmode="none", height=45)
+            list_frame, columns=column_all, selectmode="none", height=25)
         ctk_textbox_scrollbar_y = ctk.CTkScrollbar(
-            list_frame, orientation="vertical", command=list_tree.yview, hover=True, width=20)
+            list_frame, orientation="vertical", command=list_tree.yview, hover=True, width=10)
         ctk_textbox_scrollbar_y.pack(side=RIGHT, fill='y')
         list_tree["yscrollcommand"] = ctk_textbox_scrollbar_y.set
         ctk_textbox_scrollbar_x = ctk.CTkScrollbar(
@@ -439,7 +439,7 @@ class App():
 
         style = ttk.Style()
         style.configure("Treeview.Heading", font=("MS ゴシック", 20))
-        style.configure("Treeview", font=("Arial", 16))
+        style.configure("Treeview", rowheight=35, font=("Arial", 14))
 
         list_tree.heading('#0', text='')
         list_tree.heading('物品名', text='物品名', anchor='center')
