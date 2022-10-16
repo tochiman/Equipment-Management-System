@@ -24,3 +24,21 @@ APIの使用方法や、今回使用したフレームワークは以下のサ�
 ## 高額物品に関する会計執行について
 詳しくは以下のハイパーリンクからご確認ください。
 > [高額物品にかんする説明](https://tochiman.github.io/Equipment-Management-System/2-index.html)
+
+## Pythonから実行する場合
+1. settingフォルダを以下のような場所に設置してください。
+```
+root(equipment-management-system)/
+    ┣ docs/
+    ┣ img/
+    ┣ script/
+    ┣ setting/
+    ┃   ┣ .env
+    ┃   ┗ credentials.json
+    ┣ .gitignore
+    ┣ LICENSE
+    ┗ README.md
+2. また上のディレクトリ構造にある通り、.envフォルダは以下の通りの内容で作成。そして、
+>https://www.twilio.com/blog/an-easy-way-to-read-and-write-to-a-google-spreadsheet-in-python-jp
+にある通り、GCPのスプレッドシート操作のために、credentials.jsonを配置してください。
+```
