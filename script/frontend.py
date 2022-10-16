@@ -67,6 +67,8 @@ class App():
         progressbar.stop()          # プログレスバーの停止
 
     def register(self, get_list: list):
+        gs = gsheet.Google_spreadsheet_operation()
+        gs.db_recovery()
         """
         sqlite3とGoogleのスプレッドシートにそれぞれ登録する。また、登録する前に念のためネットワーク接続を確認している。
         """

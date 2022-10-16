@@ -3,6 +3,7 @@ from os import environ
 
 from dotenv import load_dotenv
 
+import gsheet
 
 class Ping():
     def __init__(self) -> None:
@@ -28,14 +29,32 @@ class DB_operation():
         self.dbname = environ['db_path']
         self.conn = sqlite3.connect(self.dbname)
         self.cur = self.conn.cursor()
+
+        #データベースがなければ、SQL文の通りに作成
         self.cur.execute("create table if not exists equipment(id integer primary key autoincrement,goods string,goods_detail string,use_group string,name string,purchase_date integer,control_num string unique,note string,waste string)")
+
+        #データが破損しているかをチェック
         self.cur.execute("PRAGMA integrity_check")
-        if self.cur == "ok":
-            print(123456789)
+        db_check = self.cur.fetchall()
+        if str(db_check[0][0]) != "ok": self.db_recovery()      #mもし破損している場合は自動復旧へ
+
+    def db_recovery(self):
+        self.cur.execute("DROP TABLE IF EXISTS equipment")
+        self.cur.execute("create table if not exists equipment(id integer primary key autoincrement,goods string,goods_detail string,use_group string,name string,purchase_date integer,control_num string unique,note string,waste string)")
+        gs = gsheet.Google_spreadsheet_operation()
+        return_data = gs.db_recovery()
+        try:
+            for i in range(len(return_data)):
+                self.cur.execute('INSERT INTO equipment(goods,goods_detail,use_group,name,purchase_date,control_num,note,waste) values(?,?,?,?,?,?,?,?)',
+                    (return_data[i][0], return_data[i][1], return_data[i][2], return_data[i][3], return_data[i][4], return_data[i][5], return_data[i][6], return_data[i][7]))
+        finally:
+            self.conn.commit()
+            self.cur.close()
+            self.conn.close()
+        
 
     def db_register(self, get_list: list) -> None:
         try:
-            all_list = []
             self.cur.execute('INSERT INTO equipment(goods,goods_detail,use_group,name,purchase_date,control_num,note,waste) values(?,?,?,?,?,?,?,?)',
                              (get_list[0], get_list[1], get_list[2], get_list[3], get_list[4], get_list[5], get_list[6], "-"))
         finally:

@@ -20,6 +20,12 @@ class Google_spreadsheet_operation():
         # Find a workbook by name and open the first sheet
         self.sheet = self.client.open(self.sheet_name).sheet1
 
+    def db_recovery(self) -> list:
+        #Get all_cell
+        sheet_data = self.sheet.get_all_values()
+        sheet_data.remove(sheet_data[0])
+        return sheet_data
+
     def sp_insert(self, all_list: list):
         all_list.append("-")
         # Searching empty cell and Return row-number(int)
