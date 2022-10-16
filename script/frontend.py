@@ -24,7 +24,7 @@ class App():
         self.general_font = ("Arial", 20)
         self.width = None
         self.height = None
-        #登録処理が終わっているかの確認用（Trueが終わっているという意味）
+        # 登録処理が終わっているかの確認用（Trueが終わっているという意味）
         self.finished = False
 
         # このAppはインターネットに接続していないと使えない。接続が確認できない場合はFalseを返し強制終了
@@ -37,7 +37,6 @@ class App():
                 "警告", "インターネットに接続されていないため、アプリケーションを起動できませんでした。インターネットに接続上で起動するようお願いします。")
             sys.exit()
 
-    
     def screen_size(self, screen, width: int, height: int):
         """
         画面サイズを指定したら、自動的に中央に配置されるように計算する
@@ -49,22 +48,23 @@ class App():
                         str(int(ww/2-width/2))+"+"+str(int(wh/2-height/2)))
 
     def progress(self, content: str):
+        #エラーを吐いている場合はそもそもこの関数を実行しない
+        if self.finished == True: return None
         # ウィンドウの作成
         self.prog_window = ctk.CTkToplevel()
         self.screen_size(self.prog_window, 350, 150)  # 画面サイズの決定
         self.prog_window.overrideredirect(True)  # 最大化・最小化無効
         label = ctk.CTkLabel(self.prog_window, text=content,
                              text_font=self.general_font)
-        label.pack(side="top", fill="both",pady=15)
+        label.pack(side="top", fill="both", pady=15)
         progressbar = ctk.CTkProgressBar(
             self.prog_window, progress_color="#006400", mode="indeterminate")
-        progressbar.pack(side="bottom", fill="x", padx=10,pady=15)
+        progressbar.pack(side="bottom", fill="x", padx=10, pady=15)
         progressbar.start()
         # もう一つの登録処理が終了するまで待機
         while not self.finished:
             time.sleep(0.1)
         progressbar.stop()          # プログレスバーの停止
-        self.prog_window.destroy()  # ウィンドウの消去
 
     def register(self, get_list: list):
         """
@@ -87,10 +87,13 @@ class App():
                 google_ope.sp_insert(get_list)
                 messagebox.showinfo("通知", "登録が完了しました")
             elif result == False:
+                self.finished = True
                 messagebox.showerror("警告", "インターネットに接続していないため、登録ができません")
         except sqlite3.IntegrityError:
+            self.finished = True
             messagebox.showerror("通知", f"管理番号が重複しています")
         except Exception as e:
+            self.finished = True
             messagebox.showerror("通知", f"エラーが発生しました。\n{e}")
         finally:
             # 登録処理が終了したことにする
@@ -115,9 +118,11 @@ class App():
                 google_ope.sp_delete(self.del_control_num_entry.get())
                 messagebox.showinfo("通知", "削除が完了しました")
             elif result == False:
+                self.finished = True
                 messagebox.showerror(
                     "警告", "インターネットに接続していないため、登録ができません")
         except Exception as e:
+            self.finished = True
             messagebox.showerror("エラー", f"エラーが発生しました。\n{e}")
         finally:
             # 登録処理が終了したことにする
@@ -142,9 +147,11 @@ class App():
                 google_ope.sp_waste(self.del_control_num_entry.get())
                 messagebox.showinfo("通知", "登録が完了しました")
             elif result == False:
+                self.finished = True
                 messagebox.showerror(
                     "警告", "インターネットに接続していないため、登録ができません")
         except Exception as e:
+            self.finished = True
             messagebox.showerror("エラー", f"エラーが発生しました。\n{e}")
         finally:
             # 登録処理が終了したことにする
@@ -155,7 +162,8 @@ class App():
         このAppのテーマカラーやタイトル、画面サイズの設定を行う。
         """
 
-        root.set_appearance_mode("System")          # OSのテーマカラーに合わせる。(dark or light)
+        # OSのテーマカラーに合わせる。(dark or light)
+        root.set_appearance_mode("System")
         ctk.set_default_color_theme("dark-blue")    # テーマカラーをダークブルーに統一
 
         # 画面サイズを取得
@@ -193,7 +201,7 @@ class App():
                                         text="備品一覧", text_font=self.general_font, command=lambda: self.list_screen(root))
         settings_button.grid(row=3, column=0, pady=20)
         explain_button = ctk.CTkButton(master=frame, width=300, height=60, border_width=0, corner_radius=8,
-                                       text="説明", text_font=self.general_font, command=lambda: self.list_screen(root))
+                                       text="説明", text_font=self.general_font, command=lambda: self.explanation_screen(root))
         explain_button.grid(row=4, column=0, pady=20)
         end_button = ctk.CTkButton(master=frame, width=300, height=60, border_width=0, corner_radius=8,
                                    text="終了", hover_color="red", text_font=self.general_font, command=self.end_exe)
@@ -295,22 +303,24 @@ class App():
                     return None
                 elif len(self.purchase_date_entry.get()) != 8:
                     messagebox.showerror(
-                        "入力値エラー", "８桁の数字で入力してください")
+                        "入力値エラー", "購入日は８桁の数字で入力してください")
                     return None
                 else:
                     get_list.append(i)
             # buttonを無効化
-            register_button['state'] = "disable"
-            end_button['state'] = "disable"
+            register_button.configure(state="disable")
+            end_button.configure(state="disable")
             # プログレスバーと登録処理をマルチスレッドで実行
-            register_thread = threading.Thread(target=self.register, args=(get_list,))
+            register_thread = threading.Thread(
+                target=self.register, args=(get_list,))
             progress_thread = threading.Thread(
                 target=self.progress, args=("データベースに登録中...",))
             register_thread.start()
+            time.sleep(0.3)
             progress_thread.start()
             # buttonを有効化
-            register_button['state'] = "normal"
-            end_button['state'] = "normal"
+            register_button.configure(state="normal")
+            end_button.configure(state="normal")
 
     def delete_screen(self, root: ctk.CTk):
         # タイトルの変更
@@ -360,19 +370,20 @@ class App():
                     "確認", "データベースから完全に削除をしてもよろしいですか?\n※登録を間違えたとき以外は使用しないでください。")
                 if confirm == True:
                     # buttonを無効化
-                    delete_button['state'] = "disable"
-                    waste_button['state'] = "disable"
-                    end_button['state'] = "disable"
+                    delete_button.configure(state="disable")
+                    waste_button.configure(state="disable")
+                    end_button.configure(state="disable")
                     # プログレスバーと登録処理をマルチスレッドで実行
                     delete_thread = threading.Thread(target=self.delete)
                     progress_thread = threading.Thread(
                         target=self.progress, args=("データベースに登録中...",))
                     delete_thread.start()
+                    time.sleep(0.3)
                     progress_thread.start()
                     # buttonを有効化
-                    delete_button['state'] = "normal"
-                    waste_button['state'] = "normal"
-                    end_button['state'] = "normal"
+                    delete_button.configure(state="normal")
+                    waste_button.configure(state="normal")
+                    end_button.configure(state="normal")
 
         def thread_waste():
             if self.del_control_num_entry.get() == "":
@@ -383,19 +394,20 @@ class App():
                     "確認", "データベースに対して廃棄済みとして登録しますがよろしいですか?")
                 if confirm == True:
                     # buttonを無効化
-                    delete_button['state'] = "disable"
-                    waste_button['state'] = "disable"
-                    end_button['state'] = "disable"
+                    delete_button.configure(state="disable")
+                    waste_button.configure(state="disable")
+                    end_button.configure(state="disable")
                     # プログレスバーと登録処理をマルチスレッドで実行
                     waste_thread = threading.Thread(target=self.waste)
                     progress_thread = threading.Thread(
                         target=self.progress, args=("データベースに登録中...",))
                     waste_thread.start()
+                    time.sleep(0.3)
                     progress_thread.start()
                     # buttonを有効化
-                    delete_button['state'] = "normal"
-                    waste_button['state'] = "normal"
-                    end_button['state'] = "normal"
+                    delete_button.configure(state="normal")
+                    waste_button.configure(state="normal")
+                    end_button.configure(state="normal")
 
     def list_screen(self, root: ctk.CTk):
         """
@@ -414,9 +426,9 @@ class App():
         column_all = ("物品名", "物品の型番", "使用団体",  "代表者名",
                       "購入日", "管理番号", "備考", "廃棄")
         list_tree = ttk.Treeview(
-            list_frame, columns=column_all, selectmode="none", height=45)
+            list_frame, columns=column_all, selectmode="none", height=25)
         ctk_textbox_scrollbar_y = ctk.CTkScrollbar(
-            list_frame, orientation="vertical", command=list_tree.yview, hover=True, width=20)
+            list_frame, orientation="vertical", command=list_tree.yview, hover=True, width=10)
         ctk_textbox_scrollbar_y.pack(side=RIGHT, fill='y')
         list_tree["yscrollcommand"] = ctk_textbox_scrollbar_y.set
         ctk_textbox_scrollbar_x = ctk.CTkScrollbar(
@@ -427,7 +439,7 @@ class App():
 
         style = ttk.Style()
         style.configure("Treeview.Heading", font=("MS ゴシック", 20))
-        style.configure("Treeview", font=("Arial", 16))
+        style.configure("Treeview", rowheight=35, font=("Arial", 14))
 
         list_tree.heading('#0', text='')
         list_tree.heading('物品名', text='物品名', anchor='center')
@@ -472,6 +484,10 @@ class App():
         def return_button():
             frame.destroy()
             root.minsize(1000, 750)
+
+    def explanation_screen(self, root: ctk.CTk):
+        #新しいウィンドウかつ前面でウェブブラウザを開く
+        webbrowser.open("https://tochiman.github.io/Equipment-Management-System/2-index.html", new=1, autoraise=True)
 
     def end_exe(self):
         """
