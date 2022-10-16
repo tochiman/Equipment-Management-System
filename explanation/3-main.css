@@ -39,7 +39,7 @@ a{
     color:rgb(63, 143, 97)
 }
 
-ul{
+.Nodot{
     list-style:none;
     padding-left:5px;
 }
