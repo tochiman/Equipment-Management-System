@@ -201,7 +201,7 @@ class App():
                                         text="備品一覧", text_font=self.general_font, command=lambda: self.list_screen(root))
         settings_button.grid(row=3, column=0, pady=20)
         explain_button = ctk.CTkButton(master=frame, width=300, height=60, border_width=0, corner_radius=8,
-                                       text="説明", text_font=self.general_font, command=lambda: self.list_screen(root))
+                                       text="説明", text_font=self.general_font, command=lambda: self.explanation_screen(root))
         explain_button.grid(row=4, column=0, pady=20)
         end_button = ctk.CTkButton(master=frame, width=300, height=60, border_width=0, corner_radius=8,
                                    text="終了", hover_color="red", text_font=self.general_font, command=self.end_exe)
@@ -484,6 +484,10 @@ class App():
         def return_button():
             frame.destroy()
             root.minsize(1000, 750)
+
+    def explanation_screen(self, root: ctk.CTk):
+        #新しいウィンドウかつ前面でウェブブラウザを開く
+        webbrowser.open("https://tochiman.github.io/Equipment-Management-System/2-index.html", new=1, autoraise=True)
 
     def end_exe(self):
         """
