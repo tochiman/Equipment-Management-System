@@ -16,7 +16,7 @@ class Google_spreadsheet_operation():
         self.creds = ServiceAccountCredentials.from_json_keyfile_name(
             self.cred, self.scope)
         self.client = gspread.authorize(self.creds)
-        self.sheet_name = str("高額物品管理システム(DB)")
+        self.sheet_name = environ["sheet_name"]
         # Find a workbook by name and open the first sheet
         self.sheet = self.client.open(self.sheet_name).sheet1
 

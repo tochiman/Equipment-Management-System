@@ -1,5 +1,5 @@
 # Equipment-Management-System
-学生会執行部 会計が高額物品管理をするためのアプリケーション。
+物品管理をするためのアプリケーション。
 
 ## 開発環境
 - Razer Blade Stealth 13 | i7-1065G7 | MEM:16GB | Storage:M.2.SSD 256GB
@@ -9,11 +9,7 @@
 
 ## 使用したモジュール(追加で必要なもの)
 ```bash
-$ pip install python-dotenv
-$ pip install customtkinter
-$ pip install webbrowser
-$ pip install gspread
-$ pip install oauth2client
+pip install python-dotenv customtkinter webbrowser gspread oauth2client
 ```
 
 ## Google SpreadSheetについて
@@ -39,6 +35,18 @@ root(equipment-management-system)/
     ┣ LICENSE
     ┗ README.md
 ```
-2. また上のディレクトリ構造にある通り、.envフォルダは以下の通りの内容で作成。そして、
->https://www.twilio.com/blog/an-easy-way-to-read-and-write-to-a-google-spreadsheet-in-python-jp
-にある通り、GCPのスプレッドシート操作のために、credentials.jsonを配置してください。
+2. また上のディレクトリ構造にある通り、.envフォルダは以下の例に従って作成。
+```env
+# GCPの認証ファイルパスを以下のシングルクォーテーション内に追加する
+credential_file_path='../setting/credentials.json'
+#sqlite3のファイルパスを以下に追加("最後は.sqlite3で終わるように")
+db_path='./main.sqlite3'
+#使用団体一覧(,区切りで追加可能)
+all_org='柔道部,ラグビー部,剣道部,卓球部,硬式野球部,バスケットボール部'
+#Pingの宛先(ネットワーク接続を確認するときにどこに確認しに行くかを指定可能)
+url='www.google.com'
+#Googleスプレッドシートの名前を指定
+sheet_name="高額物品管理システム(DB)"
+```
+3. `credentials.json`について
+`credentials.json`は[PythonでGoogle Sheetsを編集する方法](https://www.twilio.com/blog/an-easy-way-to-read-and-write-to-a-google-spreadsheet-in-python-jp)を参考に作成してください。
